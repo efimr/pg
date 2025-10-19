@@ -2,12 +2,13 @@ CREATE OR REPLACE FUNCTION public.url_parser(in_obj jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
--- 2025-10-19 13:00 - v1
+-- 2025-10-19 13:00 - v2
 -- !!! feature under development !!!
+-- select public.url_parser('{"full_url": null}'::jsonb)
 -- select public.url_parser('{"full_url": ""}'::jsonb)
 declare
   --x_full_url text := (in_obj ->> 'full_url')::int8;
-  x_result jsonb;
+  x_result jsonb := '{}'::jsonb;
 begin
   /* we supplement the incoming object with parameters */
   x_result := in_obj || x_result;
