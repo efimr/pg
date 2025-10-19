@@ -2,19 +2,35 @@ CREATE OR REPLACE FUNCTION public.url_parser(in_obj jsonb)
  RETURNS jsonb
  LANGUAGE plpgsql
 AS $function$
--- 2025-10-19 14:00 - v4
--- !!! feature under development !!!
--- select public.url_parser(null::jsonb)
--- select public.url_parser('null'::jsonb)
--- select public.url_parser('{}'::jsonb)
--- select public.url_parser('{"full_url": null}'::jsonb)
--- select public.url_parser('{"full_url": ""}'::jsonb)
+/*
+  2025-10-19 15:00 - v5 !!! feature under development !!!
+
+  select public.url_parser(null::jsonb);
+  select public.url_parser('null'::jsonb);
+  select public.url_parser('{}'::jsonb);
+  select public.url_parser('{"full_url": null}'::jsonb);
+  select public.url_parser('{"full_url": ""}'::jsonb);
+  select public.url_parser('{"full_url": "https://www.example.com/path/to/resource?query=value#fragment"}'::jsonb);
+
+  select regexp_match('https://www.example.com/path/to/resource?query=value#fragment', '^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?');
+*/
 declare
   x_info text := '';
+  --x_key_prefix text := '';
+
+  -- https://datatracker.ietf.org/doc/html/rfc3986#appendix-B
+  x_uri_jb jsonb;
+  x_uri_components text[];
+  x_uri_regexp text := '^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?';
+  x_uri_scheme text; --$2
+  x_uri_authority text; --$4
+  x_uri_path text; --$5
+  x_uri_query text; --$7
+  x_uri_fragment text; --$9
+
   x_full_url text;
   x_result jsonb := '{}'::jsonb;
 begin
-  x_full_url := (in_obj ->> 'full_url')::text;
 
   /* checking the existence of an input parameter */
   /* проверка существования входящего параметра */
@@ -23,7 +39,9 @@ begin
     x_result := jsonb_build_object( 'info', x_info );
     return x_result;
   end if;
-  
+
+  x_full_url := (in_obj ->> 'full_url')::text;
+
   if x_full_url is null then
     x_info := 'Unable to parse the address - not found;'; /* Невозможно разобрать адрес - не обнаружен */
     x_result := jsonb_build_object( 'info', x_info );
@@ -35,6 +53,27 @@ begin
     x_result := jsonb_build_object( 'info', x_info );
     return x_result;
   end if;
+
+  x_uri_components := regexp_match(x_full_url, x_uri_regexp);
+  x_uri_scheme := x_uri_components[2]; --$2
+  x_uri_authority := x_uri_components[4]; --$4
+  x_uri_path := x_uri_components[5]; --$5
+  x_uri_query := x_uri_components[7]; --$7
+  x_uri_fragment := x_uri_components[9]; --$9
+
+  x_info := x_info || 'Performed URI parsing;'; /* Выполнили синтаксический анализ URI */
+
+  x_uri_jb := jsonb_build_object(
+    'uri_components', x_uri_components,
+    'uri_scheme', x_uri_scheme,
+    'uri_authority', x_uri_authority,
+    'uri_path', x_uri_path,
+    'uri_query', x_uri_query,
+    'uri_fragment', x_uri_fragment,
+    'info', x_info
+  );
+
+  x_result := x_uri_jb;
 
   /* we supplement the incoming object with parameters */
   /* дополняем входящий объект параметрами */
