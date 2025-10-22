@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION public.url_parser(in_obj jsonb)
  LANGUAGE plpgsql
 AS $function$
 /*
-  2025-10-19 15:00 - v5 !!! feature under development !!!
+  2025-10-22 22:00 - v6 !!! feature under development !!!
 
   select public.url_parser(null::jsonb);
   select public.url_parser('null'::jsonb);
@@ -27,6 +27,8 @@ declare
   x_uri_path text; --$5
   x_uri_query text; --$7
   x_uri_fragment text; --$9
+
+  x_uri_scheme_default_port int;
 
   x_full_url text;
   x_result jsonb := '{}'::jsonb;
@@ -63,6 +65,12 @@ begin
 
   x_info := x_info || 'Performed URI parsing;'; /* Выполнили синтаксический анализ URI */
 
+  if x_uri_scheme = 'https' then
+    x_uri_scheme_default_port := 443;
+  elseif x_uri_scheme = 'http' then
+    x_uri_scheme_default_port := 80;
+  end if;
+
   x_uri_jb := jsonb_build_object(
     'uri_components', x_uri_components,
     'uri_scheme', x_uri_scheme,
@@ -70,6 +78,7 @@ begin
     'uri_path', x_uri_path,
     'uri_query', x_uri_query,
     'uri_fragment', x_uri_fragment,
+    'uri_scheme_default_port', x_uri_scheme_default_port,
     'info', x_info
   );
 
