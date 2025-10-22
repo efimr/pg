@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION public.url_parser(in_obj jsonb)
  LANGUAGE plpgsql
 AS $function$
 /*
-  2025-10-22 22:00 - v6 !!! feature under development !!!
+  2025-10-23 00:00 - v6 !!! feature under development !!!
 
   select public.url_parser(null::jsonb);
   select public.url_parser('null'::jsonb);
@@ -28,9 +28,12 @@ declare
   x_uri_query text; --$7
   x_uri_fragment text; --$9
 
-  x_uri_scheme_default_port int;
+  x_uri_scheme_default_port int8;
+  x_domain_name_level int8;
+  x_iana_rootzone text;
 
   x_full_url text;
+  x_full_url_length int8;
   x_result jsonb := '{}'::jsonb;
 begin
 
@@ -56,6 +59,8 @@ begin
     return x_result;
   end if;
 
+  x_full_url_length := length(x_full_url);
+
   x_uri_components := regexp_match(x_full_url, x_uri_regexp);
   x_uri_scheme := x_uri_components[2]; --$2
   x_uri_authority := x_uri_components[4]; --$4
@@ -71,6 +76,13 @@ begin
     x_uri_scheme_default_port := 80;
   end if;
 
+  if x_uri_authority is not null and x_uri_authority <> '' and x_uri_authority ~ '\.' then
+    --x_iana_rootzone := (regexp_match(x_uri_authority, '[^.]+$'))[1];
+    x_iana_rootzone := regexp_replace(x_uri_authority, '^(.+?([^.]+))$', '\2');
+
+    x_domain_name_level := regexp_count(x_uri_authority, '\.') + 1;
+  end if;
+
   x_uri_jb := jsonb_build_object(
     'uri_components', x_uri_components,
     'uri_scheme', x_uri_scheme,
@@ -79,6 +91,9 @@ begin
     'uri_query', x_uri_query,
     'uri_fragment', x_uri_fragment,
     'uri_scheme_default_port', x_uri_scheme_default_port,
+    'domain_name_level', x_domain_name_level,
+    'iana_rootzone', x_iana_rootzone,
+    'full_url_length', x_full_url_length,
     'info', x_info
   );
 
