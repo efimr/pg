@@ -38,3 +38,11 @@ The output is a JSONB object of the following format:
 
 <h2>The "info" key</h2>
 Information about the parsing process. This information may be positive if valid data is passed. It may also be negative if some of the data contradicts the intended purpose of the URL.
+
+<h2>The "full_url" key</h2>
+The most important property in the incoming object. It must be in the form of a standard URL.
+Don't pass "null," "number," or "boolean." Use a classic JavaScript string, enclosed in double quotes, according to the JSON standard.
+
+<h2>The "uri_scheme" key</h2>
+The first element of the URI syntax, from left to right. Defines the "uniform resource identifier" scheme.
+When parsing a URL, we get either "http" or "https." This affects the standard port numbers that browsers hide in the address bar.
