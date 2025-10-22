@@ -15,12 +15,13 @@ select public.url_parser('{"full_url": "https://www.example.com/path/to/resource
 The output is a JSONB object of the following format:
 ```json
 {
-  "info": "Performed URI parsing",
+  "info": "Performed URI parsing;",
   "full_url": "https://www.example.com/path/to/resource?query=value#fragment",
   "uri_path": "/path/to/resource",
   "uri_query": "query=value",
   "uri_scheme": "https",
   "uri_fragment": "fragment",
+  "iana_rootzone": "com",
   "uri_authority": "www.example.com",
   "uri_components": [
     "https:",
@@ -32,7 +33,10 @@ The output is a JSONB object of the following format:
     "query=value",
     "#fragment",
     "fragment"
-  ]
+  ],
+  "full_url_length": 61,
+  "domain_name_level": 3,
+  "uri_scheme_default_port": 443
 }
 ```
 
